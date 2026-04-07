@@ -13,21 +13,19 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
+  'https://acms-psi.vercel.app',
   process.env.FRONTEND_URL
-].filter(Boolean).map(o => o.replace(/\/$/, "")); // Trim trailing slashes for safer match
+].filter(Boolean).map(o => o.replace(/\/$/, ""));
 
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    const normalizedOrigin = origin.replace(/\/$/, "");
-    if (allowedOrigins.indexOf(normalizedOrigin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
+  origin: allowedOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+// Explicitly handle preflight requests
+app.options('*', cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
