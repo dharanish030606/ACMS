@@ -15,7 +15,7 @@ Follow these steps to deploy your Automated Curriculum Mapping System to the clo
     -   **Start Command**: `npm start`
 5.  **Environment Variables**:
     Click **Advanced** > **Add Environment Variable**:
-    -   `MONGODB_URI`: *Your Atlas Connection String*
+    -   `MONGO_URI`: *Your Atlas Connection String*
     -   `JWT_SECRET`: *A random long string*
     -   `FRONTEND_URL`: *The URL from Part 2 (e.g., https://acms-front.vercel.app)*
 6.  Click **Create Web Service**. Copy the service URL (e.g., `https://acms-backend.onrender.com`).
