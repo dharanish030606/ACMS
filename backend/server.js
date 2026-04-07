@@ -14,13 +14,13 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   process.env.FRONTEND_URL
-].filter(Boolean);
+].filter(Boolean).map(o => o.replace(/\/$/, "")); // Trim trailing slashes for safer match
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    const normalizedOrigin = origin.replace(/\/$/, "");
+    if (allowedOrigins.indexOf(normalizedOrigin) !== -1) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
