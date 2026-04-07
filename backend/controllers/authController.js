@@ -7,7 +7,7 @@ const generateToken = (user) => {
   return jwt.sign(
     { id: user._id, role: user.role, email: user.email },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN }
+    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
   );
 };
 
@@ -38,7 +38,7 @@ const login = async (req, res) => {
     });
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ message: `Server error: ${err.message}` });
+    res.status(500).json({ message: 'Server error: Authentication failed' });
   }
 };
 
