@@ -14,6 +14,6 @@ router.delete('/po/:id', auth, rbac('admin',), deletePO);
 router.get('/co/course/:course_id', auth, getCOsByCourse);
 router.post('/co', auth, rbac('admin', 'faculty'), createCO);
 router.put('/co/:id', auth, rbac('admin', 'faculty'), updateCO);
-router.delete('/co/:id', auth, rbac('admin',), deleteCO);
+router.delete('/co/:id', auth, rbac('admin', 'faculty'), deleteCO);
 
 module.exports = router;

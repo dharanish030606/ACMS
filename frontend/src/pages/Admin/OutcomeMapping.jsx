@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Box, Card, Typography, MenuItem, TextField, Grid, Chip, LinearProgress, Tooltip } from '@mui/material';
+import { useSnackbar } from 'notistack';
 import Layout from '../../components/Layout/Layout';
 import api from '../../api/axios';
 
@@ -11,6 +12,7 @@ export default function OutcomeMapping() {
   const [selectedProgram, setSelectedProgram] = useState('');
   const [heatmap, setHeatmap] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
     api.get('/programs').then(r => {
@@ -27,6 +29,33 @@ export default function OutcomeMapping() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [selectedProgram]);
+
+  const handleCellClick = async (coId, poId, poCode, currentLevel) => {
+    const nextLevel = (currentLevel + 1) % 4;
+    
+    // Optimistic Update
+    const prevHeatmap = JSON.parse(JSON.stringify(heatmap));
+    const newMatrix = heatmap.matrix.map(row => {
+      if (row.co_id === coId) {
+        return { ...row, [poCode]: nextLevel };
+      }
+      return row;
+    });
+    setHeatmap({ ...heatmap, matrix: newMatrix });
+
+    try {
+      await api.post('/mappings', {
+        co_id: coId,
+        po_id: poId,
+        correlation_level: nextLevel
+      });
+      enqueueSnackbar(nextLevel === 0 ? 'Mapping removed' : `Updated mapping to ${levelLabels[nextLevel]}`, { variant: 'success', autoHideDuration: 1500 });
+    } catch (err) {
+      console.error(err);
+      setHeatmap(prevHeatmap); // Rollback
+      enqueueSnackbar('Failed to update mapping', { variant: 'error' });
+    }
+  };
 
   return (
     <Layout>
@@ -93,15 +122,24 @@ export default function OutcomeMapping() {
                   return (
                     <Box key={po.id} sx={{ minWidth: 60, textAlign: 'center', px: 0.5 }}>
                       <Tooltip title={`${row.co_code} → ${po.code}: ${levelLabels[level]}`}>
-                        <Box sx={{
-                          width: 36, height: 36, borderRadius: 1,
-                          background: levelColors[level],
-                          border: `1px solid ${level > 0 ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.06)'}`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          mx: 'auto', cursor: 'default', transition: 'transform 0.15s',
-                          '&:hover': { transform: 'scale(1.15)' }
-                        }}>
-                          <Typography sx={{ color: level > 0 ? '#fff' : '#374151', fontSize: '0.75rem', fontWeight: 700 }}>
+                        <Box 
+                          onClick={() => handleCellClick(row.co_id, po.id, po.code, level)}
+                          sx={{
+                            width: 36, height: 36, borderRadius: 1,
+                            background: levelColors[level],
+                            border: `1px solid ${level > 0 ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            mx: 'auto', cursor: 'pointer', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                            '&:hover': { 
+                              transform: 'scale(1.2)',
+                              boxShadow: level > 0 ? `0 0 12px ${levelColors[level]}88` : '0 0 12px rgba(255,255,255,0.1)',
+                              borderColor: '#fff',
+                              zIndex: 10
+                            },
+                            '&:active': { transform: 'scale(0.95)' }
+                          }}
+                        >
+                          <Typography sx={{ color: level > 0 ? '#fff' : '#374151', fontSize: '0.75rem', fontWeight: 800 }}>
                             {level || '—'}
                           </Typography>
                         </Box>

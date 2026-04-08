@@ -8,8 +8,8 @@ const Mapping = require('../models/Mapping');
 // GET /api/users
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select('-password_hash').populate('department_id', 'name').sort('-created_at');
-    res.json(users.map(u => ({ id: u._id, department_name: u.department_id?.name, ...u.toObject() })));
+    const users = await User.find().select('-password_hash').populate('department_id', 'name').sort('-created_at').lean();
+    res.json(users.map(u => ({ ...u, id: u._id, department_name: u.department_id?.name })));
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }

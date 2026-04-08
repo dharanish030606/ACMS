@@ -23,14 +23,26 @@ export default function FacultySubmitApproval() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!window.confirm('Are you sure you want to submit this request for review?')) return;
+    
     setLoading(true);
     try {
-      await api.post('/approvals', formData);
+      // Sanitize: course_id should be null if not selected, not empty string
+      const payload = {
+        ...formData,
+        course_id: formData.course_id === '' ? null : formData.course_id
+      };
+      
+      await api.post('/approvals', payload);
       setSuccess(true);
       setFormData({ title: '', description: '', type: 'SYLLABUS_UPDATE', course_id: '' });
       fetchHistory();
       setTimeout(() => setSuccess(false), 5000);
-    } catch (err) { console.error(err); } finally { setLoading(false); }
+    } catch (err) { 
+        console.error(err);
+        const msg = err.response?.data?.message || 'Error submitting request';
+        alert(msg);
+    } finally { setLoading(false); }
   };
 
   return (

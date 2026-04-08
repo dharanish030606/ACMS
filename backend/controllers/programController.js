@@ -9,15 +9,19 @@ const getAllPrograms = async (req, res) => {
   try {
     const programs = await Program.find().populate('department_id', 'name').sort('-created_at').lean();
     
+    const formatted = [];
     for (const p of programs) {
-      p.id = p._id;
-      p.department_name = p.department_id?.name;
       const semDocs = await Semester.find({ program_id: p._id }).select('_id');
       const semIds = semDocs.map(s => s._id);
-      p.semester_count = semIds.length;
-      p.course_count = await Course.countDocuments({ semester_id: { $in: semIds } });
+      formatted.push({
+        ...p,
+        id: String(p._id),
+        department_name: p.department_id?.name,
+        semester_count: semIds.length,
+        course_count: await Course.countDocuments({ semester_id: { $in: semIds } })
+      });
     }
-    res.json(programs);
+    res.json(formatted);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }

@@ -42,17 +42,24 @@ const getApprovalById = async (req, res) => {
 const createApproval = async (req, res) => {
   try {
     const { title, description, type, course_id, program_id, department_id, academic_year } = req.body;
+    
+    console.log(`[Approval] Creating request: "${title}" by ${req.user.name}`);
 
-    const approval = await Approval.create({
-      title, description, type,
-      course_id: course_id || null,
-      program_id: program_id || null,
-      department_id: department_id || null,
+    // Sanitize IDs: convert empty strings to null to avoid Mongoose cast errors
+    const sanitizedData = {
+      title,
+      description,
+      type,
+      course_id: (course_id && course_id !== '') ? course_id : null,
+      program_id: (program_id && program_id !== '') ? program_id : null,
+      department_id: (department_id && department_id !== '') ? department_id : null,
       academic_year,
       submitted_by: req.user.id,
       status: 'pending',
       submitted_at: new Date(),
-    });
+    };
+
+    const approval = await Approval.create(sanitizedData);
 
     // Notify HOD/Admin
     const reviewers = await User.find({ role: { $in: ['admin'] }, is_active: true }).select('_id');
@@ -64,7 +71,7 @@ const createApproval = async (req, res) => {
         message: `${req.user.name} submitted: "${title}"`,
         link: '/admin/approvals',
         related_id: approval._id,
-      });
+      }).catch(err => console.error('[Notification Error]:', err));
     }
 
     await logActivity({
@@ -74,10 +81,11 @@ const createApproval = async (req, res) => {
       entity_id: approval._id,
       entity_name: title,
       req,
-    });
+    }).catch(err => console.error('[ActivityLog Error]:', err));
 
     res.status(201).json({ id: approval._id, ...approval.toObject() });
   } catch (err) {
+    console.error('[Approval Error] createApproval:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };

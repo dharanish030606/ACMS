@@ -38,7 +38,12 @@ export default function App() {
   );
 
   return (
-    <Routes>
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Forced Update Banner */}
+      <Box sx={{ bgcolor: '#1e3a8a', color: '#fff', textAlign: 'center', py: 0.5, fontSize: '0.75rem', fontWeight: 600 }}>
+        SYSTEM UPDATED (v2.1) - If mapping still fails, please Hard Refresh (Ctrl+F5)
+      </Box>
+      <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<RoleRedirect />} />
 
@@ -62,6 +67,7 @@ export default function App() {
       <Route path="/faculty/upload" element={<ProtectedRoute roles={['faculty']}><FileUpload /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
+      </Routes>
+    </Box>
   );
 }
